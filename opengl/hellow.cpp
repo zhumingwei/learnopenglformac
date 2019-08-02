@@ -85,21 +85,35 @@ int main(){
     glDeleteShader(fragmentShader);
     
     float vertices[] = {
-        -0.5,-0.5,0.0,
-        0.5,-0.5,0.0,
-        0.0,0.5,0.0
+        0.5f, 0.5f, 0.0f,   // 右上角
+        0.5f, -0.5f, 0.0f,  // 右下角
+        -0.5f, -0.5f, 0.0f, // 左下角
+        -0.5f, 0.5f, 0.0f   // 左上角
     };
-    
+
+    unsigned int indices[] = {
+        0,1,3,
+        1,2,3
+    };
+
+    unsigned int EBO;
     unsigned int VBO,VAO;
+    glGenBuffers(1, &EBO);
     glGenVertexArrays(1,&VAO);
     glGenBuffers(1, &VBO);
+
+    //绑定
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER,VBO);
     glBufferData(GL_ARRAY_BUFFER,sizeof(vertices),vertices,GL_STATIC_DRAW);
-
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3 * sizeof(float),(void*)0);
     glEnableVertexAttribArray(0);
+    
+    //解绑
     glBindBuffer(GL_ARRAY_BUFFER,0);
+    //FIXME 这里不能解绑EBO，否则会导致无法显示
     glBindVertexArray(0);
     // render loop
     // -----------
@@ -117,8 +131,11 @@ int main(){
         //draw triangle
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0 , 3);
-
+        // glDrawArrays(GL_TRIANGLES,0,3);
+        // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
+        glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
+        
+        
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
@@ -127,6 +144,7 @@ int main(){
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
     glfwTerminate();

@@ -28,8 +28,8 @@
             "type": "shell",
             "args": [
                 "-g",
-                "/Users/zhumingwei/project/c++/opengl/glad.c",
-                "/Users/zhumingwei/project/c++/opengl/hellow.cpp",
+                "opengl/glad.c",
+                "opengl/hellow.cpp",
                 "-lGLFW",
                 "-o",
                 "hello.o"

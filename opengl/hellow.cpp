@@ -6,6 +6,11 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 int genTexture(const char *spath);
@@ -89,7 +94,42 @@ int main(){
     //FIXME 这里不能解绑EBO，否则会导致无法显示
     glBindVertexArray(0);
 
-    unsigned int texture = genTexture("opengl/textures/container.jpg"); 
+    // load and create a texture
+    // -------------------------
+    unsigned int texture1, texture2;
+    // load image, create texture and generate mipmaps
+    int width, height, nrChannels;
+    unsigned char *data;
+    texture1 = genTexture("opengl/textures/container.jpg");
+    
+    // texture 2
+    // ---------
+    glGenTextures(1, &texture2);
+    glBindTexture(GL_TEXTURE_2D, texture2);
+    // set the texture wrapping parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // set texture filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // load image, create texture and generate mipmaps
+    data = stbi_load("opengl/textures/awesomeface.png", &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        // note that the awesomeface.png has transparency and thus an alpha channel, so make sure to tell OpenGL the data type is of GL_RGBA
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
+
+
+    ourShader.use();
+    ourShader.setInt("texture1", 0);
+    ourShader.setInt("texture2", 1);
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -104,17 +144,30 @@ int main(){
         glClear(GL_COLOR_BUFFER_BIT);
 
         //bind Texture
-        glBindTexture(GL_TEXTURE_2D, texture);
-        //render container
-        ourShader.use();
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
-        
-        
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture2);
+
+       //create transformations
+       glm::mat4 transform = glm::mat4(1.0f);
+       //位移
+       transform = glm::translate(transform, glm::vec3(0.0f, -0.0f, 0.0f));
+       transform = glm::rotate(transform, (float)glfwGetTime() ,glm::vec3(0.0f, 0.0f, 1.0f));
+
+       //render container
+       ourShader.use();
+    
+        unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform");
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+
+       glBindVertexArray(VAO);
+       glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+       // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+       // -------------------------------------------------------------------------------
+       glfwSwapBuffers(window);
+       glfwPollEvents();
     }
 
     glDeleteVertexArrays(1, &VAO);
@@ -147,6 +200,7 @@ int genTexture(const char *path)
 {
     
     unsigned int texture;
+    glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
     //环绕参数
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -154,9 +208,11 @@ int genTexture(const char *path)
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
     // load image, create texture and generate mipmaps
     int width, height, nrChannels;
     // The FileSystem::getPath(...) is part of the GitHub repository so we can find files on any IDE/platform; replace it with your own image path.
+    stbi_set_flip_vertically_on_load(true);
     unsigned char *data = stbi_load(path, &width, &height, &nrChannels, 0);
     if (data)
     {

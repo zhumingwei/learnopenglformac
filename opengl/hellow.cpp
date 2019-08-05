@@ -21,7 +21,7 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 800;
 
-Camera camera(glm::vec3(0.0f,0.0f,3.0f));
+Camera camera(glm::vec3(0.0f,0.0f,5.0f));
 float lastX = SCR_WIDTH/2.0f;
 float lastY = SCR_HEIGHT/2.0f;
 bool firstMouse = true;
@@ -29,6 +29,9 @@ bool firstMouse = true;
 //timing 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+
+// lighting
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 int main(){
     const int MAXPATH = 250;
     char buffer[MAXPATH];
@@ -67,48 +70,50 @@ int main(){
     glEnable(GL_DEPTH_TEST);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     Shader ourShader("opengl/shaders/shader.vs", "opengl/shaders/shader.fs");
+    Shader lampShader("opengl/shaders/lamp.vs", "opengl/shaders/lamp.fs");
+
     float vertices[] = {
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f,     0.0f,  0.0f, -1.0f,    1.0f, 0.0f,
+        0.5f, 0.5f, -0.5f,      0.0f,  0.0f, -1.0f,     1.0f, 1.0f,
+        0.5f, 0.5f, -0.5f,      0.0f,  0.0f, -1.0f,     1.0f, 1.0f,
+        -0.5f, 0.5f, -0.5f,     0.0f,  0.0f, -1.0f,     0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,     0.0f, 0.0f,
 
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-        0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-        0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f,     0.0f,  0.0f,  1.0f,     0.0f, 0.0f,
+        0.5f, -0.5f, 0.5f,      0.0f,  0.0f,  1.0f,     1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f,       0.0f,  0.0f,  1.0f,     1.0f, 1.0f,
+        0.5f, 0.5f, 0.5f,       0.0f,  0.0f,  1.0f,     1.0f, 1.0f,
+        -0.5f, 0.5f, 0.5f,      0.0f,  0.0f,  1.0f,     0.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f,     0.0f,  0.0f,  1.0f,     0.0f, 0.0f,
 
-        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-        -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f,      -1.0f,  0.0f,  0.0f,    1.0f, 0.0f,
+        -0.5f, 0.5f, -0.5f,     -1.0f,  0.0f,  0.0f,    1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,    -1.0f,  0.0f,  0.0f,    0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,    -1.0f,  0.0f,  0.0f,    0.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f,     -1.0f,  0.0f,  0.0f,    0.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f,      -1.0f,  0.0f,  0.0f,    1.0f, 0.0f,
 
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-        0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f,       1.0f,  0.0f,  0.0f,     1.0f, 0.0f,
+        0.5f, 0.5f, -0.5f,      1.0f,  0.0f,  0.0f,     1.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,     1.0f,  0.0f,  0.0f,     0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,     1.0f,  0.0f,  0.0f,     0.0f, 1.0f,
+        0.5f, -0.5f, 0.5f,      1.0f,  0.0f,  0.0f,     0.0f, 0.0f,
+        0.5f, 0.5f, 0.5f,       1.0f,  0.0f,  0.0f,     1.0f, 0.0f,
 
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,     0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,     0.0f, -1.0f,  0.0f,     1.0f, 1.0f,
+        0.5f, -0.5f, 0.5f,      0.0f, -1.0f,  0.0f,     1.0f, 0.0f,
+        0.5f, -0.5f, 0.5f,      0.0f, -1.0f,  0.0f,     1.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f,     0.0f, -1.0f,  0.0f,     0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,     0.0f, 1.0f,
 
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f
+        -0.5f, 0.5f, -0.5f,     0.0f,  1.0f,  0.0f,     0.0f, 1.0f,
+        0.5f, 0.5f, -0.5f,      0.0f,  1.0f,  0.0f,     1.0f, 1.0f,
+        0.5f, 0.5f, 0.5f,       0.0f,  1.0f,  0.0f,     1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f,       0.0f,  1.0f,  0.0f,     1.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f,      0.0f,  1.0f,  0.0f,     0.0f, 0.0f,
+        -0.5f, 0.5f, -0.5f,     0.0f,  1.0f,  0.0f,     0.0f, 1.0f
         };
 
     unsigned int VBO,VAO;
@@ -122,16 +127,29 @@ int main(){
     glBufferData(GL_ARRAY_BUFFER,sizeof(vertices),vertices,GL_STATIC_DRAW);
 
     //绑定position (0)
-    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,5 * sizeof(float),(void*)0);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,8 * sizeof(float),(void*)0);
     glEnableVertexAttribArray(0);
-    //绑定texture(1)
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+    //绑定法向量
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,8 * sizeof(float), (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    //绑定texture(2)
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(5 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
     //解绑
     glBindBuffer(GL_ARRAY_BUFFER,0);
     //FIXME 这里不能解绑EBO，否则会导致无法显示
     glBindVertexArray(0);
+
+    unsigned int lightVAO;
+    glGenVertexArrays(1, &lightVAO);
+    glBindVertexArray(lightVAO);
+    glBindBuffer(GL_ARRAY_BUFFER,VBO);
+    glBufferData(GL_ARRAY_BUFFER,sizeof(vertices),vertices,GL_STATIC_DRAW);
+        //绑定position (0)
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,8 * sizeof(float),(void*)0);
+    glEnableVertexAttribArray(0);
+   
 
     // load and create a texture
     // -------------------------
@@ -195,7 +213,7 @@ int main(){
 
         // render
         // ------
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         //bind Texture
@@ -206,6 +224,11 @@ int main(){
 
        //render container
        ourShader.use();
+       ourShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+       ourShader.setVec3("lightColor", 1.0f, 1.0f ,1.0f);
+       ourShader.setVec3("lightPos", lightPos);
+       ourShader.setVec3("viewPos", camera.Position);
+       
 
        //create transformations
        
@@ -226,7 +249,17 @@ int main(){
            ourShader.setMat4("model", model);
            glDrawArrays(GL_TRIANGLES, 0, 36);
         }
-        
+
+        //画灯泡
+        lampShader.use();
+        lampShader.setMat4("projection",projection);
+        lampShader.setMat4("view", view);
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f));
+        lampShader.setMat4("model",model);
+         glBindVertexArray(lightVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
        // -------------------------------------------------------------------------------
        glfwSwapBuffers(window);
@@ -267,9 +300,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-int genTexture(const char *path, const bool isPng)
+int genTexture(const char *path , const bool isPng)
 {
-    
     unsigned int texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);

@@ -11,16 +11,26 @@ in vec3 Normal;
 struct Material {
    vec3 ambient;
    sampler2D diffuse;
-   vec3 specular;
+   sampler2D specular;
    float shininess;
 }; 
 
 struct Light {
    vec3 position;//灯光位置
-
+   //vec3 direction;//平行光使用
    vec3 ambient;
    vec3 diffuse;
    vec3 specular;
+
+   //点光源衰减相关
+   float constant;
+   float linear;
+   float quadratic;
+
+   //聚光相关
+   vec3  direction;
+   float cutOff;
+   float outerCutOff;
 };
 //材质属性
 uniform Material material;
@@ -33,20 +43,78 @@ void main()
    //FragColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.2);
    //FragColor = lightColor * objectColor;
 
-   //环境光
-   vec3 ambient = light.ambient * mix(texture(material.diffuse, TexCoords), texture(texture2, TexCoords), 0.2).rgb;//环境光材料的初始值可以用漫反射的值
-    //漫反射
-   vec3 norm = normalize(Normal);
+   //平行光
+   // //环境光
+   // vec3 ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;//环境光材料的初始值可以用漫反射的值
+   //  //漫反射
+   // vec3 norm = normalize(Normal);
+   // vec3 lightDir = normalize(-light.direction);
+   // float diff = max(dot(norm, lightDir), 0.0);
+   // vec3 diffuse = light.diffuse * diff * texture(material.diffuse, TexCoords).rgb;
+   // //镜面光照
+   // vec3 viewDir = normalize(viewPos - FragPos);
+   // vec3 reflectDir = reflect(-lightDir, norm);
+   // float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+   // vec3 specular = material.specular * spec * light.specular;
+
+   // vec3 result = (ambient + diffuse + specular) ;
+   // FragColor =  vec4(result, 1.0);
+
+
+
+
+   //点光源
+   // vec3 ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;//环境光材料的初始值可以用漫反射的值
+   //  //漫反射
+   // vec3 norm = normalize(Normal);
+   // float diff = max(dot(norm, lightDir), 0.0);
+   // vec3 diffuse = light.diffuse * diff * texture(material.diffuse, TexCoords).rgb;
+   // //镜面光照
+   // vec3 viewDir = normalize(viewPos - FragPos);
+   // vec3 reflectDir = reflect(-lightDir, norm);
+   // float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+   // vec3 specular = material.specular * spec * light.specular;
+   
+   // float distance    = length(light.position - FragPos);
+   // float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
+   // ambient  *= attenuation; 
+   // diffuse  *= attenuation;
+   // specular *= attenuation;
+   
+   // vec3 result = (ambient + diffuse + specular) ;
+   // FragColor =  vec4(result, 1.0);
+
+   //聚光
    vec3 lightDir = normalize(light.position - FragPos);
-   float diff = max(dot(norm, lightDir), 0.0);
-   vec3 diffuse = light.diffuse * diff * mix(texture(material.diffuse, TexCoords), texture(texture2, TexCoords), 0.2).rgb;
-   //镜面光照
+   
+   //环境光
+   vec3 ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;
+   
+   //漫反射
+   vec3 norm = normalize(Normal);
+   float diff = max(dot(norm, lightDir),0.0f);
+   vec3 diffuse = light.diffuse * diff * texture(material.diffuse, TexCoords).rgb;
+   
+   //镜面反射
    vec3 viewDir = normalize(viewPos - FragPos);
-   vec3 reflectDir = reflect(-lightDir, norm);
+   vec3 reflectDir = reflect(-lightDir, norm);  
    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-   vec3 specular = material.specular * spec * light.specular;
+   vec3 specular = light.specular * spec * texture(material.specular, TexCoords).rgb;  
 
-   vec3 result = (ambient + diffuse + specular) ;
-   FragColor =  vec4(result, 1.0);
-
+   // spotlight (soft edges)
+   float theta = dot(lightDir, normalize(-light.direction)); 
+   float epsilon = (light.cutOff - light.outerCutOff);
+   float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+   diffuse  *= intensity;
+   specular *= intensity;
+   
+   // attenuation
+   float distance    = length(light.position - FragPos);
+   float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
+   ambient  *= attenuation; 
+   diffuse   *= attenuation;
+   specular *= attenuation;  
+   vec3 result = ambient + diffuse + specular;
+   FragColor = vec4(result, 1.0);
+   
 }

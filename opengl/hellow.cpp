@@ -158,13 +158,13 @@ int main(){
     int width, height, nrChannels;
     unsigned char *data;
     texture1 = genTexture("opengl/textures/container2.png");
-    texture2 = genTexture("opengl/textures/awesomeface.png");
+    texture2 = genTexture("opengl/textures/container2_specular.png");
 
     ourShader.use();
     //配置textureID 后面需要绑定根据这个数字， GL_TEXTUREX
-    ourShader.setInt("texture2", 1);
-    ourShader.setInt("texture1", 0);
     ourShader.setInt("material.diffuse",0);
+    ourShader.setInt("material.specular",1);
+    ourShader.setVec3("light.direction", -0.2f, -1.0f, -0.3f);
 
     glm::vec3 cubePositions[] = {
   glm::vec3( 0.0f,  0.0f,  0.0f), 
@@ -206,12 +206,22 @@ int main(){
 
         ourShader.setVec3("material.ambient",  1.0f, 0.5f, 0.31f);
         ourShader.setVec3("material.diffuse",  1.0f, 0.5f, 0.31f);
-        ourShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
         ourShader.setFloat("material.shininess", 32.0f);
-        ourShader.setVec3("light.ambient",  0.2f, 0.2f, 0.2f);
+        ourShader.setVec3("light.ambient",  0.1f, 0.1f, 0.1f);
         ourShader.setVec3("light.diffuse",  0.5f, 0.5f, 0.5f); // 将光照调暗了一些以搭配场景
         ourShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f); 
         ourShader.setVec3("light.position",lightPos);
+        ourShader.setFloat("light.constant",  1.0f);
+        ourShader.setFloat("light.linear",    0.09f);
+        ourShader.setFloat("light.quadratic", 0.032f);
+
+        ourShader.setVec3("light.position",  camera.Position);
+        ourShader.setVec3("light.direction", camera.Front);
+        ourShader.setFloat("light.cutOff",   glm::cos(glm::radians(12.5f)));
+        ourShader.setFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
+        ourShader.setFloat("light.constant", 1.0f);
+        ourShader.setFloat("light.linear", 0.09f);
+        ourShader.setFloat("light.quadratic", 0.032f);
        //create transformations
        
        glm::mat4 view = camera.GetViewMatrix();

@@ -67,6 +67,7 @@ int main(){
         return -1;
     }
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     Shader ourShader("opengl/shaders/shader.vs", "opengl/shaders/shader.fs");
     Shader lampShader("opengl/shaders/lamp.vs", "opengl/shaders/lamp.fs");
@@ -277,7 +278,7 @@ int main(){
        {
            glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
            model = glm::translate(model, cubePositions[i]);
-           model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
+           model = glm::rotate(model, (float)glfwGetTime()/2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
            glBindVertexArray(VAO);
            ourShader.setMat4("model", model);
            glDrawArrays(GL_TRIANGLES, 0, 36);

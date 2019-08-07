@@ -31,6 +31,7 @@
                 "opengl/glad.c",
                 "opengl/hellow.cpp",
                 "-lGLFW",
+                "-std=c++11",
                 "-o",
                 "hello.o"
             ],

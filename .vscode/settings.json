@@ -5,6 +5,9 @@
         "locale": "cpp",
         "sstream": "cpp",
         "__locale": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "iosfwd": "cpp",
+        "iterator": "cpp",
+        "vector": "cpp"
     }
 }

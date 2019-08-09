@@ -72,7 +72,7 @@ int main(){
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
-    Shader ourShader("opengl/shaders/shader.vs", "opengl/shaders/shader.fs");
+    Shader ourShader("opengl/shaders/shader.vs", "opengl/shaders/shader.fs", "opengl/shaders/shader.gs");
     Shader shader2("opengl/shaders/lamp.vs", "opengl/shaders/lamp.fs");
     Shader screenShader("opengl/shaders/framebuffers_screen.vs", "opengl/shaders/framebuffers_screen.fs");
 
@@ -435,6 +435,7 @@ int main(){
 
        //render container
        ourShader->use();
+       ourShader->setFloat("time",glfwGetTime());
        ourShader->setVec3("viewPos", camera.Position);
 
         ourShader->setVec3("material.ambient",  1.0f, 0.5f, 0.31f);

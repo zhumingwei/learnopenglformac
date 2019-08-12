@@ -18,7 +18,7 @@ struct Material {
 //材质属性
 uniform Material material;
 
-
+uniform bool blinn;
 
 struct DirLight {
    vec3 direction;//光方向
@@ -86,8 +86,14 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir){
    float diff = max(dot(normal, lightDir), 0.0);
    vec3 diffuse = light.diffuse * diff * texture(material.diffuse, TexCoords).rgb;
    //镜面光照
-   vec3 reflectDir = reflect(-lightDir, normal);
-   float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+   float spec;
+   if(blinn){
+      vec3 halfDir = normalize(lightDir + viewDir);  
+      spec = pow(max(dot(viewDir, halfDir), 0.0), material.shininess);
+   }else{
+      vec3 reflectDir = reflect(-lightDir, normal);
+      spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+   }
    vec3 specular = texture(material.specular, TexCoords).rgb * spec * light.specular;
 
    vec3 result = (ambient + diffuse + specular) ;
@@ -101,8 +107,14 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir){
    float diff = max(dot(normal, lightDir), 0.0);
    vec3 diffuse = light.diffuse * diff * texture(material.diffuse, TexCoords).rgb;
    //镜面光照
-   vec3 reflectDir = reflect(-lightDir, normal);
-   float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+   float spec;
+   if(blinn){
+      vec3 halfDir = normalize(lightDir + viewDir);  
+      spec = pow(max(dot(viewDir, halfDir), 0.0), material.shininess);
+   }else{
+      vec3 reflectDir = reflect(-lightDir, normal);
+      spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+   }
    vec3 specular = texture(material.specular, TexCoords).rgb * spec * light.specular;
    
    float distance    = length(light.position - FragPos);
@@ -127,8 +139,14 @@ vec3 CalcSpotLight(SpotLight light,vec3 normal,vec3 fragPos, vec3 viewDir){
    vec3 diffuse = light.diffuse * diff * texture(material.diffuse, TexCoords).rgb;
    
    //镜面反射
-   vec3 reflectDir = reflect(-lightDir, normal);  
-   float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+   float spec;
+   if(blinn){
+      vec3 halfDir = normalize(lightDir + viewDir);  
+      spec = pow(max(dot(viewDir, halfDir), 0.0), material.shininess);
+   }else{
+      vec3 reflectDir = reflect(-lightDir, normal);
+      spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+   }
    vec3 specular = light.specular * spec * texture(material.specular, TexCoords).rgb;  
 
    //spotlight (soft edges)

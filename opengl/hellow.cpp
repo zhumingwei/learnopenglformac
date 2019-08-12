@@ -44,6 +44,7 @@ int main(){
     std::cout << "The current directory is:" << buffer << std::endl;
 
     glfwInit();
+    glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -76,9 +77,11 @@ int main(){
     Shader shader2("opengl/shaders/lamp.vs", "opengl/shaders/lamp.fs");
     Shader screenShader("opengl/shaders/framebuffers_screen.vs", "opengl/shaders/framebuffers_screen.fs");
 
+    glEnable(GL_MULTISAMPLE);//抗锯齿
     glEnable(GL_DEPTH_TEST);
     // glEnable(GL_STENCIL_TEST);//模板缓冲
-    glEnable(GL_BLEND);
+    // glEnable(GL_BLEND);
+    glEnable(GL_FRAMEBUFFER_SRGB);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     // glEnable(GL_CULL_FACE);//面剔除 默认丢弃顺时针
     // glCullFace(GL_BACK);//剔除背向面
